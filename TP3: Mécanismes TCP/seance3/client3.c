@@ -13,7 +13,7 @@
 int main (int argc, char *argv[]) {
 
     struct sockaddr_in adresse;
-    int port = 5001;
+    int port = 5002;
     int valid = 1;
     char s_buffer[RCVSIZE];
     char c_buffer[RCVSIZE];
@@ -48,7 +48,8 @@ int main (int argc, char *argv[]) {
     // [1] Envoie du "SYN" au serveur
     sendto(client_desc, syn, strlen(syn), 0,
             (struct sockaddr*)&adresse, server_struct_length);
-            
+
+          
     //int cont = 1;
     while(1){ 
 

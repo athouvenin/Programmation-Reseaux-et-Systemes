@@ -18,10 +18,17 @@ int main(int argc, char *argv[]){
     int client_struct_length = sizeof(client_addr);*/
     
     // déclaration des variables
-    struct sockaddr_in server_addr, client_addr;
+
+    struct sockaddr_in server_addr, client_addr, control_addr;
+    
+
     int port= 5001;
+    int port_c = 5002;
     int valid= 1;
+
     socklen_t alen= sizeof(client_addr);
+    //socklen_t alenc= sizeof(cli_control_addr);
+
     char s_buffer[RCVSIZE];
     char c_buffer[RCVSIZE];
     char synack[RCVSIZE] = "SYN-ACK";
@@ -29,11 +36,10 @@ int main(int argc, char *argv[]){
     memset(s_buffer, 0, sizeof(s_buffer));
     memset(c_buffer, 0, sizeof(c_buffer));
 
-    // (1) create socket
+    // (1) CREATE SOCKETS
     int server_desc = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    int control_desc = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-    // afficher valeur descripteur
-    // printf ("valeur descripteur: %d\n", server_desc);
 
     // (2) handle error
     if (server_desc < 0) {
@@ -41,26 +47,38 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-    // (3) fonction pour réutiliser immédiatement la socket
+    // (3) fonction pour réutiliser immédiatement les sockets
     setsockopt(server_desc, SOL_SOCKET, SO_REUSEADDR, &valid, sizeof(int));
+    setsockopt(control_desc, SOL_SOCKET, SO_REUSEADDR, &valid, sizeof(int));
 
     // (4) faire le lien entre la socket et le couple (@IP, port) avec la structure sockaddr (coté serveur)
     server_addr.sin_family= AF_INET;
     server_addr.sin_port= htons(port);
     server_addr.sin_addr.s_addr= htonl(INADDR_ANY);
 
+    control_addr.sin_family= AF_INET;
+    control_addr.sin_port= htons(port_c);
+    control_addr.sin_addr.s_addr= htonl(INADDR_ANY);
+
     // (5) initialize socket
+
     if (bind(server_desc, (struct sockaddr*) &server_addr, sizeof(server_addr)) == -1) {
         perror("Bind failed\n");
         close(server_desc);
         return -1;
-    }   
+    }  
+
+    if (bind(control_desc, (struct sockaddr*) &control_addr, sizeof(control_addr)) == -1) {
+        perror("Bind failed\n");
+        close(control_desc);
+        return -1;
+    } 
     printf("Listen done\n");
 
-    // (6) Receive client's message:
+    // (6) CONTROL MESSSAGES
     //printf("Accepting\n");
 
-    if (recvfrom(server_desc, c_buffer, sizeof(c_buffer), 0,
+    if (recvfrom(control_desc, c_buffer, sizeof(c_buffer), 0,
         (struct sockaddr*)&client_addr, &alen) < 0){
         printf("Couldn't receive\n");
         return -1;
@@ -77,13 +95,14 @@ int main(int argc, char *argv[]){
         memset(c_buffer,0,RCVSIZE);
 
         // [2] Respond "SYN-ACK" to client
-        sendto(server_desc, synack, strlen(synack), 0,
+        sendto(control_desc, synack, strlen(synack), 0,
             (struct sockaddr*)&client_addr, alen);
         
 
         while(1){ 
 
-            if (recvfrom(server_desc, c_buffer, sizeof(c_buffer), 0,
+            //[3] Reception du "ACK"
+            if (recvfrom(control_desc, c_buffer, sizeof(c_buffer), 0,
                 (struct sockaddr*)&client_addr, &alen) < 0){
                 printf("Couldn't receive\n");
                 return -1;
@@ -94,6 +113,14 @@ int main(int argc, char *argv[]){
                 printf("ACK from client: %s\n",c_buffer);
 
                 memset(c_buffer,0,RCVSIZE);
+
+                // Envoie du numéro de port au client
+                char num_p[1000];
+                sprintf(num_p, "%d", port_c);
+                printf("Converted to string : %s\n", num_p);
+
+                sendto(control_desc, num_p, strlen(num_p), 0,
+                    (struct sockaddr*)&client_addr, alen);
 
                 //***************************
                 printf("Accepting\n");
