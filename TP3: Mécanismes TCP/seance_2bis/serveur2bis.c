@@ -57,8 +57,10 @@ int main(int argc, char *argv[]){
     printf("Listen done\n");
 
     // (6) Receive client's message:
+
     while(1){
-        printf("Accepting\n");
+
+        //printf("Accepting\n");
 
         if (recvfrom(server_desc, c_buffer, sizeof(c_buffer), 0,
             (struct sockaddr*)&client_addr, &alen) < 0){
@@ -68,8 +70,10 @@ int main(int argc, char *argv[]){
         printf("Received message from IP: %s and port: %i\n",
             inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
         
-        printf("Msg from client: %s\n",c_buffer);
-        
+        //if (c_buffer[] == "ACK"){
+        if (strcmp(c_buffer,"ACK") == 0){
+            printf("Msg from client: %s\n",c_buffer);
+        }
         memset(c_buffer,0,RCVSIZE);
 
         // Respond to client:

@@ -16,11 +16,11 @@ int main (int argc, char *argv[]) {
     int port = 5001;
     int valid = 1;
     char s_buffer[RCVSIZE];
-    char c_buffer[RCVSIZE];
+    char c_buffer[RCVSIZE] = "ACK";
     int server_struct_length = sizeof(adresse);
 
     memset(s_buffer, 0, sizeof(s_buffer));
-    memset(c_buffer, 0, sizeof(c_buffer));
+    //memset(c_buffer, 0, sizeof(c_buffer));
 
     // (1) create socket
     int client_desc = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -42,6 +42,11 @@ int main (int argc, char *argv[]) {
 
     // (6) recevoir et transmettre des messages
 
+    //envoie du "ACK" au serveur
+    //c_buffer[] = "ACK";
+    sendto(client_desc, c_buffer, strlen(c_buffer), 0,
+            (struct sockaddr*)&adresse, server_struct_length);
+            
     //int cont = 1;
     while(1){ 
 
