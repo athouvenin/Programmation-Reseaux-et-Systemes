@@ -85,7 +85,7 @@ int main (int argc, char *argv[]) {
             }
             
             printf("Server's response: %s\n", s_buffer);
-        }
+            }
     }
     // Close the socket:
     close(client_desc);
