@@ -63,12 +63,12 @@ int main (int argc, char *argv[]) {
         if (strcmp(s_buffer,"SYN-ACK") == 0){
             printf("Response from server: %s\n",s_buffer);
 
-            /*// [3] Renvoie du "ACK" au serveur
+            // [3] Renvoie du "ACK" au serveur
             sendto(client_desc, ack, strlen(ack), 0,
-            (struct sockaddr*)&adresse, server_struct_length);*/
+            (struct sockaddr*)&adresse, server_struct_length);
 
             //***********************************************
-            //fgets(c_buffer, RCVSIZE, stdin);   
+            fgets(c_buffer, RCVSIZE, stdin);   
             if(sendto(client_desc, c_buffer, strlen(c_buffer), 0,
                 (struct sockaddr*)&adresse, server_struct_length) < 0){
                 printf("Unable to send message\n");

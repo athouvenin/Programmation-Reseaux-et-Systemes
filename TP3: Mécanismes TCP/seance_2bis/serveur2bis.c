@@ -58,44 +58,56 @@ int main(int argc, char *argv[]){
     printf("Listen done\n");
 
     // (6) Receive client's message:
+    //printf("Accepting\n");
 
-    while(1){
+    if (recvfrom(server_desc, c_buffer, sizeof(c_buffer), 0,
+        (struct sockaddr*)&client_addr, &alen) < 0){
+        printf("Couldn't receive\n");
+        return -1;
+    }
 
-        //printf("Accepting\n");
 
-        if (recvfrom(server_desc, c_buffer, sizeof(c_buffer), 0,
-            (struct sockaddr*)&client_addr, &alen) < 0){
-            printf("Couldn't receive\n");
-            return -1;
-        }
-
-        printf("Received message from IP: %s and port: %i\n",
-            inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-        //printf("contenu c_buffer: %s\n",c_buffer);
+    // [1] Recevoir le SYN du client
+    printf("Received message from IP: %s and port: %i\n",
+        inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
         
-        //Afficher le "SYN" du client
-        if (strcmp(c_buffer,"SYN") == 0){
-            printf("Msg from client: %s\n",c_buffer);
+    if (strcmp(c_buffer,"SYN") == 0){
+        printf("SYN from client: %s\n",c_buffer);
         
-            memset(s_buffer,0,RCVSIZE);
+        memset(c_buffer,0,RCVSIZE);
 
-            //Respond "SYN-ACK" to client
-            sendto(server_desc, synack, strlen(synack), 0,
-                (struct sockaddr*)&client_addr, alen);
+        // [2] Respond "SYN-ACK" to client
+        sendto(server_desc, synack, strlen(synack), 0,
+            (struct sockaddr*)&client_addr, alen);
+        
 
+        while(1){ 
 
-
-            // Respond to client:
-            fgets(s_buffer, RCVSIZE, stdin);
-            //strcpy(s_buffer, c_buffer);
-            
-            if (sendto(server_desc, s_buffer, strlen(s_buffer), 0,
-                (struct sockaddr*)&client_addr, alen) < 0){
-                printf("Can't send\n");
+            if (recvfrom(server_desc, c_buffer, sizeof(c_buffer), 0,
+                (struct sockaddr*)&client_addr, &alen) < 0){
+                printf("Couldn't receive\n");
                 return -1;
+            } 
+            printf("contenu c_buffer: %s\n",c_buffer);  
+
+            if (strcmp(c_buffer,"ACK") == 0){
+                printf("ACK from client: %s\n",c_buffer);
+
+                //***************************
+                // Respond to client:
+                fgets(s_buffer, RCVSIZE, stdin);
+                //strcpy(s_buffer, c_buffer);
+                        
+                if (sendto(server_desc, s_buffer, strlen(s_buffer), 0,
+                    (struct sockaddr*)&client_addr, alen) < 0){
+                    printf("Can't send\n");
+                    return -1;
+                }
             }
         }
+            
     }
+    
     
     // Close the socket:
     close(server_desc);
