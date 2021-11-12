@@ -16,7 +16,10 @@ int main (int argc, char *argv[]) {
     int port = 5001;
     int valid = 1;
     char s_buffer[RCVSIZE];
-    char c_buffer[RCVSIZE] = "ACK";
+    char c_buffer[RCVSIZE];
+    char syn[RCVSIZE] = "SYN";
+    char ack[RCVSIZE] = "ACK";
+
     int server_struct_length = sizeof(adresse);
 
     memset(s_buffer, 0, sizeof(s_buffer));
@@ -42,31 +45,47 @@ int main (int argc, char *argv[]) {
 
     // (6) recevoir et transmettre des messages
 
-    //envoie du "ACK" au serveur
-    //c_buffer[] = "ACK";
-    sendto(client_desc, c_buffer, strlen(c_buffer), 0,
+    // [1] Envoie du "SYN" au serveur
+    sendto(client_desc, syn, strlen(syn), 0,
             (struct sockaddr*)&adresse, server_struct_length);
             
     //int cont = 1;
     while(1){ 
 
-        fgets(c_buffer, RCVSIZE, stdin);   
-        if(sendto(client_desc, c_buffer, strlen(c_buffer), 0,
-            (struct sockaddr*)&adresse, server_struct_length) < 0){
-            printf("Unable to send message\n");
-            return -1;
-        }
-        
-        memset(s_buffer,0,RCVSIZE);
+        // [2] Afficher le "SYN-ACK" du serveur
 
-        // Receive the server's response:
         if(recvfrom(client_desc, s_buffer, sizeof(s_buffer), 0,
             (struct sockaddr*)&adresse, &server_struct_length) < 0){
             printf("Error while receiving server's msg\n");
             return -1;
         }
-        
-        printf("Server's response: %s\n", s_buffer);
+
+        if (strcmp(s_buffer,"SYN-ACK") == 0){
+            printf("Response from server: %s\n",s_buffer);
+
+            /*// [3] Renvoie du "ACK" au serveur
+            sendto(client_desc, ack, strlen(ack), 0,
+            (struct sockaddr*)&adresse, server_struct_length);*/
+
+            //***********************************************
+            //fgets(c_buffer, RCVSIZE, stdin);   
+            if(sendto(client_desc, c_buffer, strlen(c_buffer), 0,
+                (struct sockaddr*)&adresse, server_struct_length) < 0){
+                printf("Unable to send message\n");
+                return -1;
+            }
+            
+            memset(s_buffer,0,RCVSIZE);
+
+            // Receive the server's response:
+            if(recvfrom(client_desc, s_buffer, sizeof(s_buffer), 0,
+                (struct sockaddr*)&adresse, &server_struct_length) < 0){
+                printf("Error while receiving server's msg\n");
+                return -1;
+            }
+            
+            printf("Server's response: %s\n", s_buffer);
+        }
     }
     // Close the socket:
     close(client_desc);

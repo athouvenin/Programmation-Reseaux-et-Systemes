@@ -24,6 +24,7 @@ int main(int argc, char *argv[]){
     socklen_t alen= sizeof(client_addr);
     char s_buffer[RCVSIZE];
     char c_buffer[RCVSIZE];
+    char synack[RCVSIZE] = "SYN-ACK";
 
     memset(s_buffer, 0, sizeof(s_buffer));
     memset(c_buffer, 0, sizeof(c_buffer));
@@ -67,23 +68,32 @@ int main(int argc, char *argv[]){
             printf("Couldn't receive\n");
             return -1;
         }
+
         printf("Received message from IP: %s and port: %i\n",
             inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+        //printf("contenu c_buffer: %s\n",c_buffer);
         
-        //if (c_buffer[] == "ACK"){
-        if (strcmp(c_buffer,"ACK") == 0){
+        //Afficher le "SYN" du client
+        if (strcmp(c_buffer,"SYN") == 0){
             printf("Msg from client: %s\n",c_buffer);
-        }
-        memset(c_buffer,0,RCVSIZE);
-
-        // Respond to client:
-        fgets(s_buffer, RCVSIZE, stdin);
-        //strcpy(s_buffer, c_buffer);
         
-        if (sendto(server_desc, s_buffer, strlen(s_buffer), 0,
-            (struct sockaddr*)&client_addr, alen) < 0){
-            printf("Can't send\n");
-            return -1;
+            memset(s_buffer,0,RCVSIZE);
+
+            //Respond "SYN-ACK" to client
+            sendto(server_desc, synack, strlen(synack), 0,
+                (struct sockaddr*)&client_addr, alen);
+
+
+
+            // Respond to client:
+            fgets(s_buffer, RCVSIZE, stdin);
+            //strcpy(s_buffer, c_buffer);
+            
+            if (sendto(server_desc, s_buffer, strlen(s_buffer), 0,
+                (struct sockaddr*)&client_addr, alen) < 0){
+                printf("Can't send\n");
+                return -1;
+            }
         }
     }
     
