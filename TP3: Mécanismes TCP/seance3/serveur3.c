@@ -31,7 +31,12 @@ int main(int argc, char *argv[]){
 
     char s_buffer[RCVSIZE];
     char c_buffer[RCVSIZE];
+
+    char num_p[1000];
+    sprintf(num_p, "%d", port);   //traduction d'un int en char
     char synack[RCVSIZE] = "SYN-ACK";
+    char* SynAckPort = strcat(synack, num_p);
+    printf("Converted to string : %s\n", SynAckPort);
 
     memset(s_buffer, 0, sizeof(s_buffer));
     memset(c_buffer, 0, sizeof(c_buffer));
@@ -66,7 +71,7 @@ int main(int argc, char *argv[]){
         perror("Bind failed\n");
         close(server_desc);
         return -1;
-    }  
+    } 
 
     if (bind(control_desc, (struct sockaddr*) &control_addr, sizeof(control_addr)) == -1) {
         perror("Bind failed\n");
@@ -88,16 +93,19 @@ int main(int argc, char *argv[]){
     // [1] Recevoir le SYN du client
     printf("Received message from IP: %s and port: %i\n",
         inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-        
+      
     if (strcmp(c_buffer,"SYN") == 0){
         printf("SYN from client: %s\n",c_buffer);
-        
         memset(c_buffer,0,RCVSIZE);
 
-        // [2] Respond "SYN-ACK" to client
-        sendto(control_desc, synack, strlen(synack), 0,
+        // [2] Respond "SYN-ACK" to client +  NUMERO PORT MESSAGES
+        printf("on envoie syn-ack au client \n");      
+        int sen = sendto(control_desc, SynAckPort, strlen(SynAckPort), 0,
             (struct sockaddr*)&client_addr, alen);
-        
+        if (sen <0){
+            perror("erreur d'envoie");
+        }
+        printf("on envoie %d\n", sen);
 
         while(1){ 
 
@@ -114,13 +122,7 @@ int main(int argc, char *argv[]){
 
                 memset(c_buffer,0,RCVSIZE);
 
-                // Envoie du numéro de port au client
-                char num_p[1000];
-                sprintf(num_p, "%d", port_c);
-                printf("Converted to string : %s\n", num_p);
-
-                sendto(control_desc, num_p, strlen(num_p), 0,
-                    (struct sockaddr*)&client_addr, alen);
+                
 
                 //***************************
                 printf("Accepting\n");

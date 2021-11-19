@@ -12,7 +12,7 @@
 
 int main (int argc, char *argv[]) {
 
-    struct sockaddr_in adresse;
+    struct sockaddr_in adresse, message_addr;
     int port = 5002;
     int valid = 1;
     char s_buffer[RCVSIZE];
@@ -61,17 +61,35 @@ int main (int argc, char *argv[]) {
             return -1;
         }
 
-        if (strcmp(s_buffer,"SYN-ACK") == 0){
+        if (strstr(s_buffer,"SYN-ACK")){      //si le cont du buffer contient "SYN-ACK"
             printf("Response from server: %s\n",s_buffer);
+            char *nouv_pc = strtok(s_buffer, "SYN-ACK");    //on enlève SYN-ACK de la chaine de char
+            int nouv_p = atoi(nouv_pc);
+            printf("le numéro de port est %d\n", nouv_p);
 
             // [3] Renvoie du "ACK" au serveur
             sendto(client_desc, ack, strlen(ack), 0,
             (struct sockaddr*)&adresse, server_struct_length);
 
             //***********************************************
+            // CREATION DE LA NOUVELLE SOCKET
+            int message_desc = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+            
+            if (message_desc < 0) {
+                perror("cannot create socket\n");
+                return -1;
+            }
+
+            setsockopt(message_desc, SOL_SOCKET, SO_REUSEADDR, &valid, sizeof(int));
+
+            message_addr.sin_family= AF_INET;
+            message_addr.sin_port= htons(nouv_p);
+            message_addr.sin_addr.s_addr= htonl(INADDR_ANY);
+
+            //***********************************************
             fgets(c_buffer, RCVSIZE, stdin);   
-            if(sendto(client_desc, c_buffer, strlen(c_buffer), 0,
-                (struct sockaddr*)&adresse, server_struct_length) < 0){
+            if(sendto(message_desc, c_buffer, strlen(c_buffer), 0,
+                (struct sockaddr*)&message_addr, server_struct_length) < 0){
                 printf("Unable to send message\n");
                 return -1;
             }
@@ -79,8 +97,8 @@ int main (int argc, char *argv[]) {
             memset(s_buffer,0,RCVSIZE);
 
             // Receive the server's response:
-            if(recvfrom(client_desc, s_buffer, sizeof(s_buffer), 0,
-                (struct sockaddr*)&adresse, &server_struct_length) < 0){
+            if(recvfrom(message_desc, s_buffer, sizeof(s_buffer), 0,
+                (struct sockaddr*)&message_addr, &server_struct_length) < 0){
                 printf("Error while receiving server's msg\n");
                 return -1;
             }
