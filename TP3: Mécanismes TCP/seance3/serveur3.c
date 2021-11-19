@@ -127,26 +127,28 @@ int main(int argc, char *argv[]){
                 //***************************
                 printf("Accepting\n");
 
-                if (recvfrom(server_desc, c_buffer, sizeof(c_buffer), 0,
-                    (struct sockaddr*)&client_addr, &alen) < 0){
-                    printf("Couldn't receive\n");
-                    return -1;
-                }
-                printf("Received message from IP: %s and port: %i\n",
-                    inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-                
-                printf("Msg from client: %s\n",c_buffer);
-                
-                memset(c_buffer,0,RCVSIZE);
+                while(1){
+                    if (recvfrom(server_desc, c_buffer, sizeof(c_buffer), 0,
+                        (struct sockaddr*)&client_addr, &alen) < 0){
+                        printf("Couldn't receive\n");
+                        return -1;
+                    }
+                    printf("Received message from IP: %s and port: %i\n",
+                        inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+                    
+                    printf("Msg from client: %s\n",c_buffer);
+                    
+                    memset(c_buffer,0,RCVSIZE);
 
-                // Respond to client:
-                fgets(s_buffer, RCVSIZE, stdin);
-                //strcpy(s_buffer, c_buffer);
-                
-                if (sendto(server_desc, s_buffer, strlen(s_buffer), 0,
-                    (struct sockaddr*)&client_addr, alen) < 0){
-                    printf("Can't send\n");
-                    return -1;
+                    // Respond to client:
+                    fgets(s_buffer, RCVSIZE, stdin);
+                    //strcpy(s_buffer, c_buffer);
+                    
+                    if (sendto(server_desc, s_buffer, strlen(s_buffer), 0,
+                        (struct sockaddr*)&client_addr, alen) < 0){
+                        printf("Can't send\n");
+                        return -1;
+                    }
                 }
             }
         }

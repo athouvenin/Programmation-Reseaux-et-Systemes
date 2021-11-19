@@ -87,23 +87,25 @@ int main (int argc, char *argv[]) {
             message_addr.sin_addr.s_addr= htonl(INADDR_ANY);
 
             //***********************************************
-            fgets(c_buffer, RCVSIZE, stdin);   
-            if(sendto(message_desc, c_buffer, strlen(c_buffer), 0,
-                (struct sockaddr*)&message_addr, server_struct_length) < 0){
-                printf("Unable to send message\n");
-                return -1;
-            }
-            
-            memset(s_buffer,0,RCVSIZE);
+            while(1){
+                fgets(c_buffer, RCVSIZE, stdin);   
+                if(sendto(message_desc, c_buffer, strlen(c_buffer), 0,
+                    (struct sockaddr*)&message_addr, server_struct_length) < 0){
+                    printf("Unable to send message\n");
+                    return -1;
+                }
+                
+                memset(s_buffer,0,RCVSIZE);
 
-            // Receive the server's response:
-            if(recvfrom(message_desc, s_buffer, sizeof(s_buffer), 0,
-                (struct sockaddr*)&message_addr, &server_struct_length) < 0){
-                printf("Error while receiving server's msg\n");
-                return -1;
-            }
-            
-            printf("Server's response: %s\n", s_buffer);
+                // Receive the server's response:
+                if(recvfrom(message_desc, s_buffer, sizeof(s_buffer), 0,
+                    (struct sockaddr*)&message_addr, &server_struct_length) < 0){
+                    printf("Error while receiving server's msg\n");
+                    return -1;
+                }
+                
+                printf("Server's response: %s\n", s_buffer);
+                }
             }
     }
     // Close the socket:
