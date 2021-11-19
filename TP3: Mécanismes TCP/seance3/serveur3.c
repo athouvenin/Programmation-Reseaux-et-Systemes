@@ -98,14 +98,12 @@ int main(int argc, char *argv[]){
         printf("SYN from client: %s\n",c_buffer);
         memset(c_buffer,0,RCVSIZE);
 
-        // [2] Respond "SYN-ACK" to client +  NUMERO PORT MESSAGES
-        printf("on envoie syn-ack au client \n");      
+        // [2] Respond "SYN-ACK" to client +  NUMERO PORT MESSAGES   
         int sen = sendto(control_desc, SynAckPort, strlen(SynAckPort), 0,
             (struct sockaddr*)&client_addr, alen);
         if (sen <0){
             perror("erreur d'envoie");
         }
-        printf("on envoie %d\n", sen);
 
         while(1){ 
 
